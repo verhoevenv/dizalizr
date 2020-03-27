@@ -1,15 +1,14 @@
 <template>
   <div>
     <h1>Hello world!</h1>
-    <select v-model="selected1">
-      <option selected value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-    </select>
-    <button @click="addDie">Add!</button>
+    
+    <a @click="addDie(1)"><img src="../assets/die-1.svg"></a>
+    <a @click="addDie(2)"><img src="../assets/die-2.svg"></a>
+    <a @click="addDie(3)"><img src="../assets/die-3.svg"></a>
+    <a @click="addDie(4)"><img src="../assets/die-4.svg"></a>
+    <a @click="addDie(5)"><img src="../assets/die-5.svg"></a>
+    <a @click="addDie(6)"><img src="../assets/die-6.svg"></a>
+    
     <p>
     <span>For {{ allDice }} = {{ sum }}, roll this or higher : {{ prob }} </span>
     </p>
@@ -30,8 +29,8 @@ export default Vue.extend({
     }
   },
   methods: {
-    addDie() {
-      store.commit('DieAdded', parseInt(this.selected1))
+    addDie(value: number) {
+      store.commit('DieAdded', value)
     }
   },
   computed: {
