@@ -9,6 +9,10 @@ export function cartesianProduct<T>(arr: T[][]) {
     }, new Array<T[]>(new Array<T>()))
 }
 
-export function sum(arr: number[]) {
-    return arr.reduce((a, b) => a + b, 0);
+export function sum(arr: number[] | IterableIterator<number>) {
+    let totalSum = 0;
+    for (const v of arr) {
+        totalSum += v;
+    }
+    return totalSum;
 }

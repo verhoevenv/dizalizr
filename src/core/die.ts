@@ -1,4 +1,4 @@
-import { ProbabilityDemarcation, DiscreteProbabilityDistribution, SumDistribution, UniformDistribution } from './probability'
+import { ProbabilityDemarcation, DiscreteProbabilityDistribution, UniformDistribution, SumOfUniformsDistribution } from './probability'
 
 class RolledDice {
     dice: number[] = []
@@ -12,7 +12,7 @@ class RolledDice {
         for (let i = 0; i < numDice; i++) {
             dice2.push(new UniformDistribution(6));
         }
-        this.expectedDist = new SumDistribution(dice2);
+        this.expectedDist = new SumOfUniformsDistribution(numDice, 6);
     }
 
     get probs(): ProbabilityDemarcation {
