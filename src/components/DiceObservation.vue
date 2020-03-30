@@ -10,7 +10,7 @@
     <a @click="addDie(6)"><img src="../assets/die-6.svg"></a>
     
     <p>
-    <span>For {{ allDice }} = {{ sum }}, roll this or higher : {{ prob }} </span>
+    <span>For {{ allDice }} = {{ sum }} ({{ diceExpr }}), roll this or higher : {{ prob }} </span>
     </p>
   </div>
 </template>
@@ -35,8 +35,14 @@ export default Vue.extend({
   },
   computed: {
     prob() {
+      if (store.state.dice.length === 0) {
+        return NaN;
+      }
       const probs = analyze(store.state.dice);
       return probs.same + probs.higher;
+    },
+    diceExpr() {
+      return `${store.state.dice.length}d6`;
     },
     allDice() {
       return store.state.dice
