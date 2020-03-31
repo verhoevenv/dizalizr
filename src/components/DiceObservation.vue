@@ -12,43 +12,76 @@
     <p>
     <span>For {{ allDice }} = {{ sum }} ({{ diceExpr }}), roll this or higher : {{ prob }} </span>
     </p>
+    <canvas id="dist-plot"></canvas>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
-import store from '../store'
-import { analyze } from '../core/die'
+import Chart from 'chart.js';
+import { RolledDice } from '../core/die'
 import { sum } from '../core/arrays'
 
 export default Vue.extend({
   name: 'DiceObservation',
-  data: function() {
+  data: function(): {chart: Chart | null} {
     return  {
-      selected1: ''
+        chart: null
     }
   },
   methods: {
     addDie(value: number) {
-      store.commit('DieAdded', value)
+      this.$store.commit('DieAdded', value)
+    },
+    createChart(chartId: string, data: Chart.ChartData, options: Chart.ChartOptions) {
+      const ctx = document.getElementById(chartId) as HTMLCanvasElement;
+      return new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: options,
+      });
     }
+  },
+  mounted() {
+    this.chart = this.createChart('dist-plot', this.chartData, {});
+  },
+  updated() {
+    this.chart!.data.labels = this.chartData.datasets[0].labels;
+    this.chart!.data.datasets![0].data = this.chartData.datasets[0].data;
+
+    const colors: string[] = new Array(this.chartData.datasets[0].data.length);
+    colors.fill('rgba(0, 0, 0, 0.1)');
+    const idx = this.chartData.datasets[0].labels.indexOf(this.sum);
+    colors[idx] = 'green';
+    this.chart!.data.datasets![0].backgroundColor = colors;
+    this.chart!.update();
   },
   computed: {
     prob() {
-      if (store.state.dice.length === 0) {
+      if (this.$store.state.dice.length === 0) {
         return NaN;
       }
-      const probs = analyze(store.state.dice);
-      return probs.same + probs.higher;
+      const dice: RolledDice = this.$store.getters.rolledDice;
+      return dice.probs.same + dice.probs.higher;
+    },
+    chartData() {
+      const dice: RolledDice = this.$store.getters.rolledDice;
+      const p = dice.expectedDist.probs
+      return {
+        datasets: [{
+          labels: Array.from(p.keys()),
+          data: Array.from(p.values())
+        }]
+      };
     },
     diceExpr() {
-      return `${store.state.dice.length}d6`;
+      return `${this.$store.state.dice.length}d6`;
     },
     allDice() {
-      return store.state.dice
+      return this.$store.state.dice
     },
     sum() {
-      return sum(store.state.dice)
+      return sum(this.$store.state.dice)
     }
   }
 });
