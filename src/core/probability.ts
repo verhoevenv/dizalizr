@@ -85,7 +85,7 @@ function unionUniverse(...ds: DiscreteProbabilityDistribution[]) {
 function sumUniverse(...ds: DiscreteProbabilityDistribution[]) {
     //assumption: all universes range from 1 to n, with at most negligable gaps
     // this allows us to just range from (1 * ds.length) .. (sum(n))
-    const min = ds.length;
+    const min = sum(ds.map(x => wu(x.probs.keys()).reduce((a, b) => (a < b) ? a : b)));
     const max = sum(ds.map(x => wu(x.probs.keys()).reduce((a, b) => (a > b) ? a : b)));
     return [...Array(1+max-min).keys()].map(v => min+v);
 }
