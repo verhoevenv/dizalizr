@@ -1,4 +1,4 @@
-# dizalazr
+# dizalizr
 
 Fixes all your 'but you just had lucky rolls' arguments.
 
