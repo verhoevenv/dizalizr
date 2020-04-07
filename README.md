@@ -1,5 +1,12 @@
 # dizalazr
 
+Fixes all your 'but you just had lucky rolls' arguments.
+
+Related tools:
+
+* AnyDice: https://anydice.com/
+* Troll: https://topps.diku.dk/torbenm/troll.msp
+
 ## Project setup
 ```
 npm install
