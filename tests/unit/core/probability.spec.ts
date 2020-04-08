@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { UniformDistribution, SlowSumDistribution, compare, FreeformDistribution, SumDistribution } from '@/core/probability'
+import { UniformDistribution, SlowSumDistribution, compare, FreeformDistribution, SumDistribution, ScalarMultipleDistribution } from '@/core/probability'
 
 describe('Distributions can be compared', () => {
   it('to detect same distributions', () => {
@@ -19,7 +19,7 @@ describe('Distributions can be compared', () => {
 })
 
 
-const sumDistImpls = [SumDistribution]
+const sumDistImpls = [SlowSumDistribution, SumDistribution]
 for (const implConstructor of sumDistImpls) {
   describe(implConstructor.name, () => {
     it('sums uniforms', () => {
@@ -83,3 +83,15 @@ for (const implConstructor of sumDistImpls) {
   })
   
 }
+
+describe("SumOfIdenticalsDistribution", () => {
+  for (let i = 1; i <= 20; i++) {
+    it(`sums ${i}d6 equally to SumDistribution`, () => {   
+      const result = new ScalarMultipleDistribution(new UniformDistribution(6), i);
+  
+      const expected = new SumDistribution(Array(i).fill(new UniformDistribution(6)));
+      expect(compare(result, expected)).to.be.closeTo(0, 0.0001)
+    })
+  }
+
+});

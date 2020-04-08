@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
+    "module": "commonjs",
+    //"module": "esnext", <- needed to run node scripts with ts, put back once on node 13+
     "strict": true,
     "jsx": "preserve",
     "importHelpers": true,

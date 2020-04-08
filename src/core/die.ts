@@ -1,4 +1,4 @@
-import { ProbabilityDemarcation, DiscreteProbabilityDistribution, UniformDistribution, SumDistribution } from './probability'
+import { ProbabilityDemarcation, DiscreteProbabilityDistribution, UniformDistribution, ScalarMultipleDistribution } from './probability'
 import { sum } from './arrays';
 
 export class RolledDice {
@@ -10,12 +10,8 @@ export class RolledDice {
     ) {
         const numDice = dice.length;
         this.dice = dice;
-        
-        const dice2 = [];
-        for (let i = 0; i < numDice; i++) {
-            dice2.push(new UniformDistribution(6));
-        }
-        this.expectedDist = new SumDistribution(dice2);
+
+        this.expectedDist = new ScalarMultipleDistribution(new UniformDistribution(6), numDice);
 
         this.probs = this.expectedDist.probsFor(sum(this.dice));
     }

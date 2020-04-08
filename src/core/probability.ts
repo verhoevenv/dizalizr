@@ -96,6 +96,8 @@ export function compare(d1: DiscreteProbabilityDistribution, d2: DiscreteProbabi
     return absError;
 }
 
+// this is the bottleneck of everything,
+//   maybe fourier transform might help speed this up for large distributions
 function convolve(d1: DiscreteProbabilityDistribution, d2: DiscreteProbabilityDistribution): DiscreteProbabilityDistribution {
     //per https://en.wikipedia.org/wiki/Convolution_of_probability_distributions
     const keysOfDs = unionUniverse(d1, d2);
@@ -197,14 +199,48 @@ export class SumDistribution implements DiscreteProbabilityDistribution {
     constructor(
         public bases: DiscreteProbabilityDistribution[]
     ) {
-        this.bases = bases;
-
         const [b1, ...basesRest] = bases;
         let resultDistribution = b1 || new NullDistribution();
         for (const d of basesRest) {
             resultDistribution = convolve(resultDistribution, d);
         }
         this.probs = resultDistribution.probs;
+
+        sanityCheck(this);
+    }
+
+    probsFor = (result: Result) => demarcationFromProbs(this.probs, result);
+}
+
+/**
+ * Efficiently calculates the sum of multiple times the same distribution.
+ * 
+ * This should use O(log(times)) convolutions,
+ * but the convolutions themselves are O(times^2) so this still has boundaries
+ */
+export class ScalarMultipleDistribution implements DiscreteProbabilityDistribution {
+
+    probs: Map<Result, number>;
+
+    constructor(
+        public base: DiscreteProbabilityDistribution,
+        public times: number
+    ) {
+        let n = 1;
+        let toAdd = times;
+        let powerOfTwoProbs = base;
+        let accumulatedProbs = new NullDistribution();
+
+        while (n <= times) {
+            if (toAdd % (n * 2) !== 0) {
+                accumulatedProbs = convolve(accumulatedProbs, powerOfTwoProbs);
+                toAdd = toAdd - n;
+            }
+            powerOfTwoProbs = convolve(powerOfTwoProbs, powerOfTwoProbs);
+            n = n * 2;
+        }
+
+        this.probs = accumulatedProbs.probs;
 
         sanityCheck(this);
     }
