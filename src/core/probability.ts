@@ -65,13 +65,6 @@ export class FreeformDistribution implements DiscreteProbabilityDistribution {
     probsFor = (result: Result) => demarcationFromProbs(this.probs, result);
 }
 
-// not sure this is okay, since it is _not_ a probability distribution (sum = 0)
-// might need to be explicit about this later on
-export class NullDistribution implements DiscreteProbabilityDistribution {
-    probs = new Map();
-    probsFor = (result: Result) => demarcationFromProbs(this.probs, result);
-}
-
 function unionUniverse(...ds: DiscreteProbabilityDistribution[]) {
     const allKeys = new Set<number>();
     for (const d of ds) {
@@ -145,6 +138,19 @@ export class UniformDistribution implements DiscreteProbabilityDistribution {
         }
     }
 
+}
+
+export class NullDistribution implements DiscreteProbabilityDistribution {
+    probs: Map<Result, number>;
+
+    constructor() {
+        this.probs = new Map();
+        this.probs.set(0, 1);
+
+        sanityCheck(this);
+    }
+
+    probsFor = (result: Result) => demarcationFromProbs(this.probs, result);
 }
 
 /**
