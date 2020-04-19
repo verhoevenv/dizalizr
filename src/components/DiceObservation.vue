@@ -24,8 +24,20 @@
     <p>
       <span>For {{ allDice }} = {{ sum }} ({{ diceExpr }}), roll this or higher : {{ prob }}</span>
     </p>
-    <canvas id="dist-plot"></canvas>
-    <canvas id="probs-plot"></canvas>
+
+    <button @click="addObservation">Commit</button>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr;">
+      <div>
+        <canvas id="dist-plot"></canvas>
+      </div>
+      <div>
+        <canvas id="probs-plot"></canvas>
+      </div>
+      <div style="grid-column-start: 1; grid-column-end: 3;">
+        <canvas id="time-plot"></canvas>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -34,18 +46,23 @@ import Vue from "vue";
 import Chart from "chart.js";
 import { RolledDice } from "../core/die";
 import { sum } from "../core/arrays";
+import { Observation } from '../store';
 
 export default Vue.extend({
   name: "DiceObservation",
-  data: function(): { distChart: Chart | null; probChart: Chart | null } {
+  data: function(): { distChart: Chart | null; probChart: Chart | null; timeChart: Chart | null } {
     return {
       distChart: null,
-      probChart: null
+      probChart: null,
+      timeChart: null
     };
   },
   methods: {
     addDie(value: number) {
       this.$store.commit("DieAdded", value);
+    },
+    addObservation() {
+      this.$store.commit("ObservationCommitted");
     },
     createChart(
       chartId: string,
@@ -81,6 +98,18 @@ export default Vue.extend({
         }],
       }}
     );
+    this.timeChart = this.createChart(
+      "time-plot",
+      "line",
+      this.timeChartData,
+      {
+        scales: {
+          xAxes: [{
+            type: 'time'
+          }]
+        }
+      }
+    );
   },
   updated() {
     this.distChart!.data.labels = this.distChartData.datasets[0].labels;
@@ -99,6 +128,10 @@ export default Vue.extend({
     this.probChart!.data.datasets![1].data = this.probChartData.datasets[1].data;
     this.probChart!.data.datasets![2].data = this.probChartData.datasets[2].data;
     this.probChart!.update();
+
+    this.timeChart!.data = this.timeChartData;
+    this.timeChart!.update();
+
   },
   computed: {
     prob() {
@@ -141,6 +174,20 @@ export default Vue.extend({
             backgroundColor: "rgba(0, 0, 0, 0.1)",
             data: [p.higher]
           },
+        ]
+      };
+    },
+    timeChartData(): Chart.ChartData {
+      const dice: Observation[] = this.$store.state.observations
+      const p = dice.map(({timestamp, value}) => ({x: timestamp, y: value}));
+      return {
+        datasets: [
+          {
+            label: "lower",
+            data: p,
+            cubicInterpolationMode: 'monotone',
+            lineTension: 0
+          }
         ]
       };
     },
