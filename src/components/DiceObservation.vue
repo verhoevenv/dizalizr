@@ -20,7 +20,6 @@
     <a @click="addDie(6)">
       <img src="../assets/die-6.svg" />
     </a>
-
     <p>
       <span>For {{ allDice }} = {{ sum }} ({{ diceExpr }}), roll this or higher : {{ prob }}</span>
     </p>
@@ -28,14 +27,10 @@
     <button @click="addObservation">Commit</button>
     
     <div style="display: grid; grid-template-columns: 1fr 1fr;">
-      <div>
-        <canvas id="dist-plot"></canvas>
-      </div>
-      <div>
-        <canvas id="probs-plot"></canvas>
-      </div>
+      <DistributionChart v-bind:dice="rolledDice" />
+      <ProbabilityChart v-bind:dice="rolledDice" />
       <div style="grid-column-start: 1; grid-column-end: 3;">
-        <canvas id="time-plot"></canvas>
+        <TimeChart v-bind:observations="observations" />
       </div>
     </div>
   </div>
@@ -46,94 +41,25 @@ import Vue from "vue";
 import Chart from "chart.js";
 import { RolledDice } from "../core/die";
 import { sum } from "../core/arrays";
-import { Observation } from '../store';
+import DistributionChart from "./DistributionChart.vue"
+import ProbabilityChart from "./ProbabilityChart.vue"
+import TimeChart from "./TimeChart.vue"
 
 export default Vue.extend({
   name: "DiceObservation",
-  data: function(): { distChart: Chart | null; probChart: Chart | null; timeChart: Chart | null } {
-    return {
-      distChart: null,
-      probChart: null,
-      timeChart: null
-    };
-  },
   methods: {
     addDie(value: number) {
       this.$store.commit("DieAdded", value);
     },
     addObservation() {
       this.$store.commit("ObservationCommitted");
-    },
-    createChart(
-      chartId: string,
-      type: string,
-      data: Chart.ChartData,
-      options: Chart.ChartOptions
-    ) {
-      const ctx = document.getElementById(chartId) as HTMLCanvasElement;
-      return new Chart(ctx, {
-        type: type,
-        data: data,
-        options: options
-      });
     }
   },
-  mounted() {
-    this.distChart = this.createChart(
-      "dist-plot",
-      "bar",
-      this.distChartData,
-      {}
-    );
-    this.probChart = this.createChart(
-      "probs-plot",
-      "horizontalBar",
-      this.probChartData,
-      {scales: {
-        xAxes: [{
-          stacked: true,
-        }],
-        yAxes: [{
-          stacked: true,
-        }],
-      }}
-    );
-    this.timeChart = this.createChart(
-      "time-plot",
-      "line",
-      this.timeChartData,
-      {
-        scales: {
-          xAxes: [{
-            type: 'time'
-          }]
-        }
-      }
-    );
-  },
-  updated() {
-    this.distChart!.data.labels = this.distChartData.datasets[0].labels;
-    this.distChart!.data.datasets![0].data = this.distChartData.datasets[0].data;
 
-    const colors: string[] = new Array(
-      this.distChartData.datasets[0].data.length
-    );
-    colors.fill("rgba(0, 0, 0, 0.1)");
-    const idx = this.distChartData.datasets[0].labels.indexOf(this.sum);
-    colors[idx] = "green";
-    this.distChart!.data.datasets![0].backgroundColor = colors;
-    this.distChart!.update();
-
-    this.probChart!.data.datasets![0].data = this.probChartData.datasets[0].data;
-    this.probChart!.data.datasets![1].data = this.probChartData.datasets[1].data;
-    this.probChart!.data.datasets![2].data = this.probChartData.datasets[2].data;
-    this.probChart!.update();
-
-    this.timeChart!.data = this.timeChartData;
-    this.timeChart!.update();
-
-  },
   computed: {
+    rolledDice() {
+      return this.$store.getters.rolledDice;
+    },
     prob() {
       if (this.$store.state.dice.length === 0) {
         return NaN;
@@ -141,56 +67,7 @@ export default Vue.extend({
       const dice: RolledDice = this.$store.getters.rolledDice;
       return dice.probs.same + dice.probs.higher;
     },
-    distChartData() {
-      const dice: RolledDice = this.$store.getters.rolledDice;
-      const p = dice.expectedDist.probs;
-      return {
-        datasets: [
-          {
-            labels: Array.from(p.keys()),
-            data: Array.from(p.values())
-          }
-        ]
-      };
-    },
-    probChartData() {
-      const dice: RolledDice = this.$store.getters.rolledDice;
-      const p = dice.probs;
-      return {
-        labels: ["a"],
-        datasets: [
-          {
-            label: "lower",
-            backgroundColor: "rgba(0, 0, 0, 0.1)",
-            data: [p.lower]
-          },
-          {
-            label: "same",
-            backgroundColor: "green",
-            data: [p.same]
-          },
-          {
-            label: "higher",
-            backgroundColor: "rgba(0, 0, 0, 0.1)",
-            data: [p.higher]
-          },
-        ]
-      };
-    },
-    timeChartData(): Chart.ChartData {
-      const dice: Observation[] = this.$store.state.observations
-      const p = dice.map(({timestamp, value}) => ({x: timestamp, y: value}));
-      return {
-        datasets: [
-          {
-            label: "lower",
-            data: p,
-            cubicInterpolationMode: 'monotone',
-            lineTension: 0
-          }
-        ]
-      };
-    },
+    
     diceExpr() {
       return `${this.$store.state.dice.length}d6`;
     },
@@ -198,8 +75,16 @@ export default Vue.extend({
       return this.$store.state.dice;
     },
     sum() {
-      return sum(this.$store.state.dice);
+      return this.$store.getters.rolledDice.sum;
+    },
+    observations() {
+      return this.$store.state.observations;
     }
+  },
+  components: {
+    DistributionChart,
+    ProbabilityChart,
+    TimeChart
   }
 });
 </script>

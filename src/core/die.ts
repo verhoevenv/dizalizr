@@ -4,6 +4,7 @@ import { sum } from './arrays';
 export class RolledDice {
     public expectedDist: DiscreteProbabilityDistribution
     public probs: ProbabilityDemarcation
+    public sum: number
 
     constructor(
         public dice: number[]
@@ -13,6 +14,7 @@ export class RolledDice {
 
         this.expectedDist = new ScalarMultipleDistribution(new UniformDistribution(6), numDice);
 
-        this.probs = this.expectedDist.probsFor(sum(this.dice));
+        this.sum = sum(this.dice);
+        this.probs = this.expectedDist.probsFor(this.sum);
     }
 }
